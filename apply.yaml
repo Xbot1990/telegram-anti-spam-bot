@@ -1,4 +1,0 @@
-app: telegram-anti-spam-bot
-language: python
-run: python bot.py
-start: python bot.py
