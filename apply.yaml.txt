@@ -1,3 +1,6 @@
 app: telegram-anti-spam-bot
-language: python
-run: python bot.py
+build:
+  language: python
+  command: pip install -r requirements.txt
+run:
+  command: python bot.py
