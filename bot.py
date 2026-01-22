@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
+# === ДОБАВИЛ ЭТО ДЛЯ WEB-СЕРВЕРА ===
+from flask import Flask
+import threading
+# ===================================
+
 # ================== ЛОГИРОВАНИЕ ==================
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -261,8 +266,34 @@ async def analyze_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+# ================== FLASK WEB SERVER ==================
+# === ДОБАВИЛ ЭТУ ФУНКЦИЮ ===
+def run_web_server():
+    """Запускает простой веб-сервер для проверки работоспособности"""
+    app = Flask(__name__)
+    
+    @app.route('/')
+    def home():
+        return "🤖 Telegram Anti-Spam Bot is running!"
+    
+    @app.route('/health')
+    def health():
+        return "OK", 200
+    
+    # Запускаем на порту 8080 (как требует Apply.build)
+    app.run(host='0.0.0.0', port=8080)
+
+
 # ================== MAIN ==================
 def main():
+    # === ДОБАВИЛ ЭТО ===
+    # Запускаем веб-сервер в отдельном потоке
+    web_thread = threading.Thread(target=run_web_server, daemon=True)
+    web_thread.start()
+    print("🌐 Веб-сервер запущен на порту 8080")
+    # ===================
+    
+    # Твой оригинальный код бота
     app = Application.builder().token(TOKEN).build()
 
     # Обработчики команд
