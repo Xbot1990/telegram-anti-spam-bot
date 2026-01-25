@@ -1,0 +1,19 @@
+# Файлы и папки, которые НЕ будут копироваться в контейнер
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.db
+*.sqlite3
+.DS_Store
+.git/
+.gitignore
+README.md
+*.log
+*.tmp
+test/
+tests/

@@ -1,0 +1,53 @@
+from datetime import datetime, timedelta
+from config import TARIFFS, PAYMENT_DETAILS, CREATOR_ID
+import logging
+logger = logging.getLogger(__name__)
+
+class TariffSystem:
+    def __init__(self, database):
+        self.db = database
+    def get_tariff_description(self, tariff_type):
+        tariff = TARIFFS.get(tariff_type)
+        if not tariff: return "Тариф не найден"
+        description = f"🤖 **ТАРИФ «{tariff['name'].upper()}»**\n\n"
+        if tariff_type == "trial":
+            description += "🎁 **30 дней бесплатно**\n\n"
+        else:
+            description += f"📆 **Месяц:** {tariff['price_month']} руб\n\n"
+        description += "✅ **ВКЛЮЧАЕТ:**\n"
+        if tariff_type == "trial": description += "• 1 группа\n• Базовые фильтры\n• Уведомления в ЛС"
+        elif tariff_type == "standard": description += "• 3 группы\n• Расширенные фильтры\n• Настройка кнопками"
+        elif tariff_type == "pro": description += "• 10 групп\n• Умный режим\n• Веб-панель"
+        else: description += "• Безлимит групп\n• White-label\n• API доступ"
+        return description
+    def get_tariff_for_admin(self, admin_id):
+        admin = self.db.get_admin(admin_id)
+        if not admin: return "trial"
+        end_date = datetime.fromisoformat(admin["окончание_подписки"])
+        if datetime.now() > end_date:
+            self.db.update_admin_tariff(admin_id, "trial")
+            return "trial"
+        return admin["тариф"]
+    def can_add_group(self, admin_id, current_groups_count):
+        tariff_type = self.get_tariff_for_admin(admin_id)
+        tariff = TARIFFS.get(tariff_type)
+        if not tariff: return False
+        if tariff["groups"] == 999: return True
+        return current_groups_count < tariff["groups"]
+    def process_payment_selection(self, admin_id, tariff_type, period):
+        tariff = TARIFFS.get(tariff_type)
+        if not tariff: return None
+        amount = tariff["price_month"]
+        days = 30
+        payment = self.db.create_payment(admin_id, tariff_type, amount, period)
+        return {"payment_id": payment["id"], "tariff": tariff["name"], "amount": amount, "days": days}
+    def confirm_payment(self, payment_id):
+        payment = self.db.data["платежи"].get(payment_id)
+        if not payment: return False, "Платёж не найден"
+        if payment["статус"] == "подтвержден": return False, "Уже подтверждён"
+        self.db.update_payment(payment_id, "подтвержден")
+        admin_id = payment["admin_id"]
+        tariff_type = payment["тариф"]
+        self.db.update_admin_tariff(admin_id, tariff_type, 30)
+        logger.info(f"Платёж {payment_id} подтверждён")
+        return True, "Тариф активирован"

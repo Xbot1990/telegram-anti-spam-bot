@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from config import TARIFFS
+
+# 🔧 ИСПРАВЛЕНО: Добавлены недостающие функции
+
+def get_main_menu():
+    """Главное меню"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("⚙️ НАСТРОЙКИ", callback_data="settings")],
+        [InlineKeyboardButton("💰 ТАРИФЫ", callback_data="tariffs")],
+        [InlineKeyboardButton("📞 ПОДДЕРЖКА", callback_data="support")]
+    ])
+
+def get_tariffs_menu():
+    """Меню тарифов"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🎁 ПРОБНЫЙ 30 ДНЕЙ", callback_data="tariff_trial"),
+         InlineKeyboardButton("🟢 СТАНДАРТ", callback_data="tariff_standard")],
+        [InlineKeyboardButton("🟡 ПРО", callback_data="tariff_pro"),
+         InlineKeyboardButton("🔴 БИЗНЕС", callback_data="tariff_business")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data="back_to_main")]
+    ])
+
+def get_tariff_details(tariff_type):
+    """Детали тарифа с кнопками оплаты"""
+    tariff = TARIFFS[tariff_type]
+    keyboard = []
+    
+    if tariff_type == "trial":
+        keyboard.append([InlineKeyboardButton("✅ АКТИВИРОВАТЬ", callback_data="activate_trial")])
+    else:
+        if tariff["price_month"] > 0:
+            keyboard.append([InlineKeyboardButton(f"📆 МЕСЯЦ — {tariff['price_month']}₽", callback_data=f"pay_{tariff_type}_month")])
+    
+    keyboard.append([InlineKeyboardButton("◀️ НАЗАД К ТАРИФАМ", callback_data="back_to_tariffs")])
+    return InlineKeyboardMarkup(keyboard)
+
+def get_payment_methods():
+    """Способы оплаты"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🏦 СБЕРБАНК", callback_data="pay_sber")],
+        [InlineKeyboardButton("💳 ТИНЬКОФФ", callback_data="pay_tinkoff")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data="back_to_tariff")]
+    ])
+
+def get_settings_menu():
+    """Меню настроек"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🛡️ АНТИСПАМ", callback_data="setting_antispam"),
+         InlineKeyboardButton("🚫 АНТИМАТ", callback_data="setting_antimat")],
+        [InlineKeyboardButton("🔗 ССЫЛКИ", callback_data="setting_links"),
+         InlineKeyboardButton("💬 ФЛУД", callback_data="setting_flood")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data="back_to_main")]
+    ])
+
+def get_setting_toggle(setting_name, is_enabled):
+    """Кнопка включения/выключения настройки"""
+    setting_display_names = {
+        "antispam": "АНТИСПАМ",
+        "antimat": "АНТИМАТ",
+        "links": "ССЫЛКИ",
+        "flood": "ФЛУД"
+    }
+    display_name = setting_display_names.get(setting_name, setting_name.upper())
+    button_text = f"{'✅' if is_enabled else '❌'} {display_name}"
+    callback_data = f"toggle_{setting_name}_{'off' if is_enabled else 'on'}"
+    
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(button_text, callback_data=callback_data)],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data="back_to_settings")]
+    ])
+
+def get_flood_settings(current_limit=5):
+    """Настройки флуд-контроля"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔴 ВЫКЛ", callback_data="flood_off"),
+         InlineKeyboardButton(f"🟡 {current_limit}/10сек", callback_data=f"flood_{current_limit}")],
+        [InlineKeyboardButton("🟢 5/10сек", callback_data="flood_5"),
+         InlineKeyboardButton("🟢 10/10сек", callback_data="flood_10")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data="back_to_settings")]
+    ])
+
+def get_payment_confirmation_buttons(payment_id):
+    """Кнопки подтверждения/отклонения платежа"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ ПОДТВЕРДИТЬ", callback_data=f"confirm_{payment_id}"),
+         InlineKeyboardButton("❌ ОТКЛОНИТЬ", callback_data=f"decline_{payment_id}")],
+        [InlineKeyboardButton("🔍 ПРОВЕРИТЬ", callback_data=f"check_{payment_id}"),
+         InlineKeyboardButton("📊 СТАТИСТИКА", callback_data=f"stats_{payment_id}")],
+        [InlineKeyboardButton("🏷️ ТЕГИ", callback_data=f"tags_{payment_id}"),
+         InlineKeyboardButton("🎯 ДЕЙСТВИЯ", callback_data=f"actions_{payment_id}")]
+    ])
+
+# 🔧 НОВОЕ: Эти функции отсутствовали в оригинале
+def get_decline_reason_buttons(payment_id):
+    """Кнопки выбора причины отклонения платежа"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("❌ НЕВЕРНАЯ СУММА", callback_data=f"decline_amount_{payment_id}")],
+        [InlineKeyboardButton("❌ НЕТ КОММЕНТАРИЯ", callback_data=f"decline_nocomment_{payment_id}")],
+        [InlineKeyboardButton("❌ НЕЧИТАЕМЫЙ СКРИН", callback_data=f"decline_badscreen_{payment_id}")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data=f"back_to_payment_{payment_id}")]
+    ])
+
+# 🔧 НОВОЕ: Эта функция отсутствовала
+def get_ban_full_details_buttons(user_id, group_id):
+    """Кнопки для полных деталей бана"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 РАЗБАНИТЬ", callback_data=f"unban_{user_id}_{group_id}")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data=f"bandetails_back_{user_id}_{group_id}")]
+    ])
+
+# 🔧 НОВОЕ: Эта функция отсутствовала
+def get_back_button(destination):
+    """Универсальная кнопка 'Назад'"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data=f"back_to_{destination}")]
+    ])
+
+def get_tags_menu(payment_id):
+    """Меню тегов для админа"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("⭐ ПОСТОЯННЫЙ", callback_data=f"tag_vip_{payment_id}")],
+        [InlineKeyboardButton("⚠️ ПРОБЛЕМНЫЙ", callback_data=f"tag_problem_{payment_id}")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data=f"back_to_payment_{payment_id}")]
+    ])
+
+def get_actions_menu(payment_id):
+    """Меню действий с админом"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🆓 +7 ДНЕЙ", callback_data=f"action_extend_{payment_id}")],
+        [InlineKeyboardButton("🔒 БЛОКИРОВАТЬ", callback_data=f"action_block_{payment_id}")],
+        [InlineKeyboardButton("◀️ НАЗАД", callback_data=f"back_to_payment_{payment_id}")]
+    ])
+
+def get_ban_details_buttons(user_id, group_id):
+    """Кнопки для деталей бана"""
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 РАЗБАНИТЬ", callback_data=f"unban_{user_id}_{group_id}")],
+        [InlineKeyboardButton("📊 ПОДРОБНЕЕ", callback_data=f"bandetails_{user_id}_{group_id}")]
+    ])
