@@ -1496,4 +1496,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Критическая ошибка: {e}")
         db.save_cache()
+
         raise
