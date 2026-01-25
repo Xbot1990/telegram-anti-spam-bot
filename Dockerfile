@@ -2,28 +2,22 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Установка системных зависимостей
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Копирование зависимостей
+# Копируем зависимости
 COPY requirements.txt .
 
-# Установка Python зависимостей
+# Устанавливаем Python зависимости БЕЗ системных пакетов
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Копирование исходного кода
+# Копируем исходный код
 COPY . .
 
-# Создание пользователя для безопасности
-RUN useradd -m -u 1000 user && \
-    chown -R user:user /app
-USER user
+# Создаем пользователя без привилегий (для безопасности)
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
 
 # Порт для Flask веб-сервера
 EXPOSE 8080
 
-# Команда запуска
+# Запускаем бота
 CMD ["python", "bot.py"]
